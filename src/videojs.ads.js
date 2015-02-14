@@ -411,6 +411,17 @@ var
                 player.el().className += ' vjs-ad-playing';
               },
               'adtimeout': function() {
+                //=== patch
+                prerollPlays++;
+                if(prerollPlays < settings.prerolls) {
+                  player.trigger('preroll-repeat');
+                  this.state = 'ads-ready?';
+                  return;
+                }
+                else prerollPlays = 0;
+                removeClass(player.el(), 'vjs-ad-loading');
+                //======
+
                 this.state = 'content-playback';
               },
               'adserror': function() {
@@ -422,6 +433,17 @@ var
             enter: function() {
               player.el().className += ' vjs-ad-loading';
               player.ads.timeout = window.setTimeout(function() {
+                //=== patch
+                prerollPlays++;
+                if(prerollPlays < settings.prerolls) {
+                  player.trigger('preroll-repeat');
+                  this.state = 'ads-ready?';
+                  return;
+                }
+                else prerollPlays = 0;
+                removeClass(player.el(), 'vjs-ad-loading');
+                //======
+
                 player.trigger('adtimeout');
               }, settings.timeout);
             },
@@ -462,6 +484,7 @@ var
             },
             leave: function() {
               removeClass(player.el(), 'vjs-ad-playing');
+              //=== patch
               prerollPlays++;
               if(prerollPlays < settings.prerolls) {
                 player.trigger('preroll-repeat');
@@ -469,13 +492,16 @@ var
                 return;
               }
               else prerollPlays = 0;
-
+              //======
               restorePlayerSnapshot(player, this.snapshot);
               if (fsm.triggerevent !== 'adend') {
                 //trigger 'adend' as a consistent notification
                 //event that we're exiting ad-playback.
                 player.trigger('adend');
               }
+              setTimeout(function() {
+                removeClass(player.el(), 'vjs-ad-loading');
+              }, 1);
             },
             events: {
               'adend': function() {
