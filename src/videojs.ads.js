@@ -499,7 +499,6 @@ var
                 //event that we're exiting ad-playback.
                 player.trigger('adend');
               }
-              removeClass(player.el(), 'vjs-ad-loading');
             },
             events: {
               'adend': function() {
