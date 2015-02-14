@@ -325,12 +325,15 @@ var
     // when truthy, instructs the plugin to output additional information about
     // plugin state to the video.js log. On most devices, the video.js log is
     // the same as the developer console.
-    debug: false
+    debug: false,
+
+    prerolls: 1
   },
 
   adFramework = function(options) {
     var
       player = this,
+      prerollPlays = 0,
 
       // merge options and defaults
       settings = extend({}, defaults, options || {}),
@@ -459,6 +462,14 @@ var
             },
             leave: function() {
               removeClass(player.el(), 'vjs-ad-playing');
+              prerollPlays++;
+              if(prerollPlays < settings.prerolls) {
+                player.trigger('preroll-repeat');
+                this.state = 'ads-ready?';
+                return;
+              }
+              else prerollPlays = 0;
+
               restorePlayerSnapshot(player, this.snapshot);
               if (fsm.triggerevent !== 'adend') {
                 //trigger 'adend' as a consistent notification
