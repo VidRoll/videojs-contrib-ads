@@ -353,6 +353,19 @@ var
       }
     };
 
+    //=== patch
+    var repeatPatch = function() {
+      prerollPlays++;
+      if(prerollPlays < settings.prerolls) {
+        player.trigger('preroll-repeat');
+        this.state = 'ads-ready?';
+        return true;
+      }
+      else { prerollPlays = 0; }
+      removeClass(player.el(), 'vjs-ad-loading');
+      return false;
+    }.bind(this); //======
+
     fsmHandler = function(event) {
       // Ad Playback State Machine
       var
@@ -411,16 +424,7 @@ var
                 player.el().className += ' vjs-ad-playing';
               },
               'adtimeout': function() {
-                //=== patch
-                prerollPlays++;
-                if(prerollPlays < settings.prerolls) {
-                  player.trigger('preroll-repeat');
-                  this.state = 'ads-ready?';
-                  return;
-                }
-                else prerollPlays = 0;
-                removeClass(player.el(), 'vjs-ad-loading');
-                //======
+                if(repeatPatch()) { return }  //=== patch
 
                 this.state = 'content-playback';
               },
@@ -433,16 +437,7 @@ var
             enter: function() {
               player.el().className += ' vjs-ad-loading';
               player.ads.timeout = window.setTimeout(function() {
-                //=== patch
-                prerollPlays++;
-                if(prerollPlays < settings.prerolls) {
-                  player.trigger('preroll-repeat');
-                  this.state = 'ads-ready?';
-                  return;
-                }
-                else prerollPlays = 0;
-                removeClass(player.el(), 'vjs-ad-loading');
-                //======
+                if(repeatPatch()) { return }  //=== patch
 
                 player.trigger('adtimeout');
               }, settings.timeout);
@@ -484,15 +479,8 @@ var
             },
             leave: function() {
               removeClass(player.el(), 'vjs-ad-playing');
-              //=== patch
-              prerollPlays++;
-              if(prerollPlays < settings.prerolls) {
-                player.trigger('preroll-repeat');
-                this.state = 'ads-ready?';
-                return;
-              }
-              else prerollPlays = 0;
-              //======
+              if(repeatPatch()) { return }  //=== patch
+
               restorePlayerSnapshot(player, this.snapshot);
               if (fsm.triggerevent !== 'adend') {
                 //trigger 'adend' as a consistent notification
