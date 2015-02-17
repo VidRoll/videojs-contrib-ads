@@ -350,12 +350,13 @@ var
     //=== patch
     var repeatPatch = function() {
       prerollPlays++;
+      console.log("Repeate check: prerollPlays="+prerollPlays+" settings.prerolls="+settings.prerolls + " r:" + prerollPlays < settings.prerolls);
       if(prerollPlays < settings.prerolls) {
         player.trigger('preroll-repeat');
         this.state = 'ads-ready?';
         return true;
       }
-      else { prerollPlays = 0; }
+      prerollPlays = 0;
       removeClass(player.el(), 'vjs-ad-loading');
       return false;
     }.bind(this); //======
