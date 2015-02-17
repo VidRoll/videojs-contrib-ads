@@ -138,6 +138,7 @@ var
    * @param {object} player The videojs player object
    */
   getPlayerSnapshot = function(player) {
+    console.log("==Snapshot ", player.currentSrc());
     var
       tech = player.el().querySelector('.vjs-tech'),
       tracks = player.remoteTextTracks(),
@@ -283,6 +284,7 @@ var
       // just resume playback at the current time.
       player.play();
     }
+    console.log("==RSnapshot ", player.currentSrc(), snapshot.src, srcChanged);
   },
 
   /**
@@ -355,7 +357,7 @@ var
         this.state = 'ads-ready?';
         setTimeout(function(){ 
           player.trigger('preroll-repeat');
-        }, 0);
+        }, 1);
         return true;
       }
       player.trigger("ended");
@@ -383,7 +385,7 @@ var
                 removeNativePoster(player);
               },
               'adserror': function() {
-                if(repeatPatch()) { return }  //=== patch
+               /// if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               }
             }
@@ -395,7 +397,7 @@ var
                 cancelContentPlay(player);
               },
               'adserror': function() {
-                if(repeatPatch()) { return }  //=== patch
+                ///if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               }
             }
@@ -424,7 +426,7 @@ var
                 player.el().className += ' vjs-ad-playing';
               },
               'adtimeout': function() {
-                if(repeatPatch()) { return }  //=== patch
+                ///if(repeatPatch()) { return }  //=== patch
 
                 this.state = 'content-playback';
               },
@@ -455,7 +457,7 @@ var
                 this.state = 'preroll?';
               },
               'adtimeout': function() {
-                if(repeatPatch()) { return }  //=== patch
+                ///if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               },
               'adserror': function() {
@@ -466,7 +468,7 @@ var
           'ad-playback': {
             enter: function() {
               // capture current player state snapshot (playing, currentTime, src)
-              this.snapshot = getPlayerSnapshot(player);
+              if(!this.snapshot) this.snapshot = getPlayerSnapshot(player);
               // remove the poster so it doesn't flash between videos
               removeNativePoster(player);
               // We no longer need to supress play events once an ad is playing.
@@ -477,10 +479,11 @@ var
               }
             },
             leave: function() {
+              console.log("==leave adplayback state");
               removeClass(player.el(), 'vjs-ad-playing');
-              if(repeatPatch()) { return }  //=== patch
 
               restorePlayerSnapshot(player, this.snapshot);
+              this.snapshot = null;
               if (fsm.triggerevent !== 'adend') {
                 //trigger 'adend' as a consistent notification
                 //event that we're exiting ad-playback.
@@ -503,6 +506,11 @@ var
                 clearImmediate(player.ads.cancelPlayTimeout);
                 player.ads.cancelPlayTimeout = null;
               }
+
+              if(repeatPatch()) { 
+                return;
+              }  //=== patch
+
               // this will cause content to start if a user initiated
               // 'play' event was canceled earlier.
               player.trigger({
