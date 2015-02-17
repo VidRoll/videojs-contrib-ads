@@ -350,12 +350,15 @@ var
     //=== patch
     var repeatPatch = function() {
       prerollPlays++;
-      console.log("Repeate check: prerollPlays="+prerollPlays+" settings.prerolls="+settings.prerolls + " r:" + prerollPlays < settings.prerolls);
+      console.log("==Repeate check: prerollPlays="+prerollPlays+" settings.prerolls="+settings.prerolls, " r:" + (prerollPlays < settings.prerolls));
       if(prerollPlays < settings.prerolls) {
+        setTimeout(function(){ 
         player.trigger('preroll-repeat');
         this.state = 'ads-ready?';
+      }, 0);
         return true;
       }
+      player.trigger("ended");
       prerollPlays = 0;
       removeClass(player.el(), 'vjs-ad-loading');
       return false;
@@ -380,6 +383,7 @@ var
                 removeNativePoster(player);
               },
               'adserror': function() {
+                if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               }
             }
@@ -391,6 +395,7 @@ var
                 cancelContentPlay(player);
               },
               'adserror': function() {
+                if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               }
             }
@@ -432,8 +437,6 @@ var
             enter: function() {
               player.el().className += ' vjs-ad-loading';
               player.ads.timeout = window.setTimeout(function() {
-                if(repeatPatch()) { return }  //=== patch
-
                 player.trigger('adtimeout');
               }, settings.timeout);
             },
@@ -452,6 +455,7 @@ var
                 this.state = 'preroll?';
               },
               'adtimeout': function() {
+                if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               },
               'adserror': function() {
