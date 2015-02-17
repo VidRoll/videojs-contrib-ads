@@ -85,9 +85,6 @@ var
   setImmediate = function(callback) {
     return (
       window.setImmediate ||
-      window.requestAnimationFrame ||
-      window.mozRequestAnimationFrame ||
-      window.webkitRequestAnimationFrame ||
       window.setTimeout
     )(callback, 0);
   },
@@ -98,9 +95,6 @@ var
    */
   clearImmediate = function(id) {
     return (window.clearImmediate ||
-            window.cancelAnimationFrame ||
-            window.webkitCancelAnimationFrame ||
-            window.mozCancelAnimationFrame ||
             window.clearTimeout)(id);
   },
 
