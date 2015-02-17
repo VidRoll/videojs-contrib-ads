@@ -352,10 +352,10 @@ var
       prerollPlays++;
       console.log("==Repeate check: prerollPlays="+prerollPlays+" settings.prerolls="+settings.prerolls, " r:" + (prerollPlays < settings.prerolls));
       if(prerollPlays < settings.prerolls) {
-        setTimeout(function(){ 
-        player.trigger('preroll-repeat');
         this.state = 'ads-ready?';
-      }, 0);
+        setTimeout(function(){ 
+          player.trigger('preroll-repeat');
+        }, 0);
         return true;
       }
       player.trigger("ended");
