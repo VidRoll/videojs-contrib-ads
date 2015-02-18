@@ -351,15 +351,19 @@ var
 
     //=== patch
     var repeatPatch = function() {
+      if (player.ads.cancelPlayTimeout) {
+          clearImmediate(player.ads.cancelPlayTimeout);
+          player.ads.cancelPlayTimeout = null;
+      }
+
       prerollPlays++;
       console.log("==Repeate check: prerollPlays="+prerollPlays+" settings.prerolls="+settings.prerolls, " r:" + (prerollPlays < settings.prerolls));
       if(prerollPlays < settings.prerolls) {
-        setTimeout(function(){ 
-          this.state = 'ads-ready?';
-          setTimeout(function(){ 
-            player.trigger('preroll-repeat');
-          }, 100);
-        },0);
+        //setTimeout(function(){ 
+          
+          player.trigger('adrepeat');
+
+       // },5);
         return true;
       }
       //player.trigger("ended");
@@ -387,7 +391,7 @@ var
                 removeNativePoster(player);
               },
               'adserror': function() {
-                if(repeatPatch()) { return }  //=== patch
+                //if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               }
             }
@@ -399,7 +403,7 @@ var
                 cancelContentPlay(player);
               },
               'adserror': function() {
-                if(repeatPatch()) { return }  //=== patch
+                //if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               }
             }
@@ -428,11 +432,11 @@ var
                 player.el().className += ' vjs-ad-playing';
               },
               'adtimeout': function() {
-                if(repeatPatch()) { return }  //=== patch
+                //if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               },
               'adserror': function() {
-                 if(repeatPatch()) { return }  //=== patch
+                // if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               }
             }
@@ -453,18 +457,18 @@ var
                 cancelContentPlay(player);
               },
               'adscanceled': function() {
-                 if(repeatPatch()) { return }  //=== patch
+                 //if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               },
               'adsready': function() {
                 this.state = 'preroll?';
               },
               'adtimeout': function() {
-                if(repeatPatch()) { return }  //=== patch
+                //if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               },
               'adserror': function() {
-                 if(repeatPatch()) { return }  //=== patch
+                // if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               }
             }
@@ -472,7 +476,9 @@ var
           'ad-playback': {
             enter: function() {
               // capture current player state snapshot (playing, currentTime, src)
-              if(!this.snapshot) this.snapshot = getPlayerSnapshot(player);
+              if(!this.snapshot) {
+                this.snapshot = getPlayerSnapshot(player);
+              }
               // remove the poster so it doesn't flash between videos
               removeNativePoster(player);
               // We no longer need to supress play events once an ad is playing.
@@ -484,12 +490,12 @@ var
             },
             leave: function() {
               console.log("==leave adplayback state");
-              if(repeatPatch()) { return }  //=== patch
+              
 
               removeClass(player.el(), 'vjs-ad-playing');
 
-              restorePlayerSnapshot(player, this.snapshot);
-              this.snapshot = null;
+              //if(this.snapshot) restorePlayerSnapshot(player, this.snapshot);
+              //this.snapshot = null;
               if (fsm.triggerevent !== 'adend') {
                 //trigger 'adend' as a consistent notification
                 //event that we're exiting ad-playback.
@@ -508,17 +514,17 @@ var
           'content-playback': {
             enter: function() {
               // make sure that any cancelPlayTimeout is cleared
-              if (player.ads.cancelPlayTimeout) {
-                clearImmediate(player.ads.cancelPlayTimeout);
-                player.ads.cancelPlayTimeout = null;
-              }
+             // if (player.ads.cancelPlayTimeout) { //todo take out
+              //  clearImmediate(player.ads.cancelPlayTimeout);
+              //  player.ads.cancelPlayTimeout = null;
+             // }
+
+              if(repeatPatch()) { return }  //=== patch
 
               if(this.snapshot) {
                 restorePlayerSnapshot(player, this.snapshot);
                 this.snapshot = null;
               }
-
-              //if(repeatPatch()) { return; }  //=== patch
 
               // this will cause content to start if a user initiated
               // 'play' event was canceled earlier.
@@ -545,6 +551,12 @@ var
                 } else {
                   this.state = 'ads-ready?';
                 }
+              },
+              'adrepeat': function() {
+                this.state = 'ads-ready?';
+                setTimeout(function(){ 
+                  player.trigger('preroll-repeat');
+                }, 1);
               }
             }
           }
@@ -572,6 +584,7 @@ var
 
     // register for the events we're interested in
     on(player, vjs.Html5.Events.concat([
+      'adrepeat',
       // events emitted by ad plugin
       'adtimeout',
       'contentupdate',
