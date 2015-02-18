@@ -297,7 +297,13 @@ var
   removeNativePoster = function(player) {
     var tech = player.el().querySelector('.vjs-tech');
     if (tech) {
-      tech.removeAttribute('poster');
+     // tech.removeAttribute('poster');
+    }
+  },
+  addNativePoster = function(player) {
+    var tech = player.el().querySelector('.vjs-tech');
+    if (tech) {
+     // tech.setAttribute('poster');
     }
   },
 
@@ -350,6 +356,7 @@ var
     };
 
     //=== patch
+    var adsPlayed = 0;
     var repeatPatch = function() {
       if (player.ads.cancelPlayTimeout) {
           clearImmediate(player.ads.cancelPlayTimeout);
@@ -387,8 +394,7 @@ var
               'play': function() {
                 this.state = 'ads-ready?';
                 cancelContentPlay(player);
-                // remove the poster so it doesn't flash between videos
-                removeNativePoster(player);
+                
               },
               'adserror': function() {
                 //if(repeatPatch()) { return }  //=== patch
@@ -475,6 +481,8 @@ var
           },
           'ad-playback': {
             enter: function() {
+              adsPlayed++;
+
               // capture current player state snapshot (playing, currentTime, src)
               if(!this.snapshot) {
                 this.snapshot = getPlayerSnapshot(player);
@@ -521,6 +529,23 @@ var
 
               if(repeatPatch()) { return }  //=== patch
 
+              
+              if(adsPlayed===0) {
+                if(this.snapshot) {
+                  restorePlayerSnapshot(player, this.snapshot);
+                  this.snapshot = null;
+                }
+                console.log("asd", adsPlayed);
+                cancelContentPlay(player);
+                player.unload();
+                
+                return;
+              }
+              adsPlayed = 0;
+
+              // remove the poster so it doesn't flash between videos
+              removeNativePoster(player);
+
               if(this.snapshot) {
                 restorePlayerSnapshot(player, this.snapshot);
                 this.snapshot = null;
@@ -543,7 +568,7 @@ var
                 this.state = 'ad-playback';
                 player.el().className += ' vjs-ad-playing';
                 // remove the poster so it doesn't flash between videos
-                removeNativePoster(player);
+                //removeNativePoster(player);
               },
               'contentupdate': function() {
                 if (player.paused()) {
