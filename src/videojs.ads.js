@@ -463,6 +463,7 @@ var
                 cancelContentPlay(player);
               },
               'adscanceled': function() {
+                prerollPlays--;
                  //if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               },
@@ -470,10 +471,12 @@ var
                 this.state = 'preroll?';
               },
               'adtimeout': function() {
+                prerollPlays--;
                 //if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               },
               'adserror': function() {
+                prerollPlays--;
                 // if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
               }
