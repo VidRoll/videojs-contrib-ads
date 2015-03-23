@@ -439,10 +439,12 @@ var
               },
               'adtimeout': function() {
                 //if(repeatPatch()) { return }  //=== patch
+                prerollPlays--;
                 this.state = 'content-playback';
               },
               'adserror': function() {
                 // if(repeatPatch()) { return }  //=== patch
+                prerollPlays--;
                 this.state = 'content-playback';
               }
             }
@@ -464,6 +466,7 @@ var
               },
               'adscanceled': function() {
                  //if(repeatPatch()) { return }  //=== patch
+                 prerollPlays--;
                 this.state = 'content-playback';
               },
               'adsready': function() {
@@ -471,10 +474,12 @@ var
               },
               'adtimeout': function() {
                 //if(repeatPatch()) { return }  //=== patch
+                prerollPlays--;
                 this.state = 'content-playback';
               },
               'adserror': function() {
                 // if(repeatPatch()) { return }  //=== patch
+                prerollPlays--;
                 this.state = 'content-playback';
               }
             }
