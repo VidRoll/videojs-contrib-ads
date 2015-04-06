@@ -420,12 +420,14 @@ var
               player.el().className += ' vjs-ad-loading';
               // schedule an adtimeout event to fire if we waited too long
               player.ads.timeout = window.setTimeout(function() {
+                console.log("contrib-ads preroll timeout");
                 player.trigger('adtimeout');
               }, settings.prerollTimeout);
               // signal to ad plugin that it's their opportunity to play a preroll
               player.trigger('readyforpreroll');
             },
             leave: function() {
+              console.log("preroll? clear prerollTimeout");
               window.clearTimeout(player.ads.timeout);
               removeClass(player.el(), 'vjs-ad-loading');
             },
@@ -457,6 +459,7 @@ var
               }, settings.timeout);
             },
             leave: function() {
+              console.log("ads-ready? clear timeout");
               window.clearTimeout(player.ads.timeout);
               removeClass(player.el(), 'vjs-ad-loading');
             },
