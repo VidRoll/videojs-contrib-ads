@@ -324,6 +324,10 @@ var
     // the standard timeout.
     prerollTimeout: 100,
 
+    // if true, it will keep retrying to play ad until it moves onto next preroll
+    // or content.
+    retrys: false,
+
     // when truthy, instructs the plugin to output additional information about
     // plugin state to the video.js log. On most devices, the video.js log is
     // the same as the developer console.
@@ -354,6 +358,8 @@ var
         player.trigger('adend');
       }
     };
+
+
 
     //=== patch
     var adsPlayed = 0;
@@ -441,12 +447,12 @@ var
               },
               'adtimeout': function() {
                 //if(repeatPatch()) { return }  //=== patch
-                prerollPlays--;
+                if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
               },
               'adserror': function() {
                 // if(repeatPatch()) { return }  //=== patch
-                prerollPlays--;
+                if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
               }
             }
@@ -469,7 +475,7 @@ var
               },
               'adscanceled': function() {
                  //if(repeatPatch()) { return }  //=== patch
-                 prerollPlays--;
+                 if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
               },
               'adsready': function() {
@@ -477,12 +483,12 @@ var
               },
               'adtimeout': function() {
                 //if(repeatPatch()) { return }  //=== patch
-                prerollPlays--;
+                if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
               },
               'adserror': function() {
                 // if(repeatPatch()) { return }  //=== patch
-                prerollPlays--;
+                if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
               }
             }
@@ -543,7 +549,7 @@ var
                   restorePlayerSnapshot(player, this.snapshot);
                   this.snapshot = null;
                 }
-                console.log("asd", adsPlayed);
+                console.log("adsPlayed: ", adsPlayed);
                 cancelContentPlay(player);
                 player.unload();
                 
