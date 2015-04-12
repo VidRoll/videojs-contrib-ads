@@ -333,6 +333,9 @@ var
     // the same as the developer console.
     debug: false,
 
+    // if true, reset the prerollPlays count to 0
+    adResetStart: false,
+
     prerolls: 1
   },
 
@@ -495,6 +498,11 @@ var
           },
           'ad-playback': {
             enter: function() {
+              if (settings.adResetStart) {
+                prerollPlays = 0;
+                console.log("==========Reset prerollPlays: " + prerollPlays);
+              }
+
               adsPlayed++;
 
               // capture current player state snapshot (playing, currentTime, src)
