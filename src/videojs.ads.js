@@ -334,7 +334,11 @@ var
     debug: false,
 
     // if true, reset the prerollPlays count to 0
-    adResetStart: false,
+    adStartReset: false,
+
+    timeoutMultiplier: 3,
+
+    maxAdRequestTimeout: 30,
 
     prerolls: 1
   },
@@ -344,8 +348,12 @@ var
       player = this,
       prerollPlays = 0,
 
+      adRequestTimeout = 0,
+
       // merge options and defaults
       settings = extend({}, defaults, options || {}),
+
+      endCycle = false, // Catch end of preroll cycle
 
       fsmHandler;
 
@@ -359,14 +367,34 @@ var
 
       endLinearAdMode: function() {
         player.trigger('adend');
+      },
+
+      endOfPrerollCycle: function() {
+        return endCycle;
+      },
+      resetPrerollCycle: function() {
+        endCycle = false;
       }
     };
 
+    var resetAdRequestTimeout = function(caller) {
+      console.log(caller + " Reset adRequestTimeout");
+      adRequestTimeout = 0;
+    };
 
+    var increaseAdRequestTimout = function(caller) {
+      adRequestTimeout += settings.timeoutMultiplier * 1000;
+      var max = (settings.maxAdRequestTimeout * 1000);
+      if (adRequestTimeout > max) {
+        adRequestTimeout = max;
+      }
+      console.log(caller + " Increase adRequestTimeout: " + adRequestTimeout);
+    };
 
     //=== patch
     var adsPlayed = 0;
     var repeatPatch = function() {
+      // NOT CALLED ANYMORE
       if (player.ads.cancelPlayTimeout) {
           clearImmediate(player.ads.cancelPlayTimeout);
           player.ads.cancelPlayTimeout = null;
@@ -408,6 +436,7 @@ var
               'adserror': function() {
                 //if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
+                increaseAdRequestTimout("content-set:adserror");
               }
             }
           },
@@ -420,6 +449,7 @@ var
               'adserror': function() {
                 //if(repeatPatch()) { return }  //=== patch
                 this.state = 'content-playback';
+                increaseAdRequestTimout("ads-ready:adserror");
               }
             }
           },
@@ -452,11 +482,13 @@ var
                 //if(repeatPatch()) { return }  //=== patch
                 if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
+                increaseAdRequestTimout("preroll?:adtimeout");
               },
               'adserror': function() {
                 // if(repeatPatch()) { return }  //=== patch
                 if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
+                increaseAdRequestTimout("preroll?:adserror");
               }
             }
           },
@@ -480,6 +512,7 @@ var
                  //if(repeatPatch()) { return }  //=== patch
                  if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
+                increaseAdRequestTimout("ads-ready?:adscanceled");
               },
               'adsready': function() {
                 this.state = 'preroll?';
@@ -488,20 +521,24 @@ var
                 //if(repeatPatch()) { return }  //=== patch
                 if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
+                increaseAdRequestTimout("ads-ready?:adtimeout");
               },
               'adserror': function() {
                 // if(repeatPatch()) { return }  //=== patch
                 if (settings.retrys) prerollPlays--;
                 this.state = 'content-playback';
+                increaseAdRequestTimout("ads-ready?:adserror");
               }
             }
           },
           'ad-playback': {
             enter: function() {
-              if (settings.adResetStart) {
+              if (settings.adStartReset) {
                 prerollPlays = 0;
                 console.log("==========Reset prerollPlays: " + prerollPlays);
               }
+
+              resetAdRequestTimeout("ad-playback:enter");
 
               adsPlayed++;
 
@@ -538,6 +575,7 @@ var
               },
               'adserror': function() {
                 this.state = 'content-playback';
+                increaseAdRequestTimout("ad-playback:adserror");
               }
             }
           },
@@ -549,7 +587,29 @@ var
               //  player.ads.cancelPlayTimeout = null;
              // }
 
-              if(repeatPatch()) { return }  //=== patch
+              console.log("CONTENT_PLAYBACK=================================");
+
+              if (player.ads.cancelPlayTimeout) {
+                  clearImmediate(player.ads.cancelPlayTimeout);
+                  player.ads.cancelPlayTimeout = null;
+              }
+
+              prerollPlays++;
+              console.log("==Repeate check: prerollPlays="+prerollPlays+" settings.prerolls="+settings.prerolls, " r:" + (prerollPlays < settings.prerolls));
+              if(prerollPlays < settings.prerolls) {
+                endCycle = false;
+                  setTimeout(function() {
+                    player.trigger('adrepeat');
+                  }, adRequestTimeout);
+                return;
+              } else {
+                endCycle = true;
+              }
+              //player.trigger("ended");
+              prerollPlays = 0;
+              removeClass(player.el(), 'vjs-ad-loading');
+            
+              //if(repeatPatch()) { return }  //=== patch
 
               
               if(adsPlayed===0) {
