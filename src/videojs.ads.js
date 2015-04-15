@@ -354,6 +354,7 @@ var
       settings = extend({}, defaults, options || {}),
 
       endCycle = false, // Catch end of preroll cycle
+      resetPrerollPlays = false,
 
       fsmHandler;
 
@@ -534,11 +535,8 @@ var
           'ad-playback': {
             enter: function() {
               if (settings.adStartReset) {
-                prerollPlays = 0;
-                console.log("==========Reset prerollPlays: " + prerollPlays);
+                resetPrerollPlays = true;
               }
-
-              resetAdRequestTimeout("ad-playback:enter");
 
               adsPlayed++;
 
@@ -575,6 +573,9 @@ var
               },
               'adserror': function() {
                 this.state = 'content-playback';
+                if (settings.adStartReset) {
+                  resetPrerollPlays = false;
+                }
                 increaseAdRequestTimout("ad-playback:adserror");
               }
             }
@@ -595,6 +596,14 @@ var
               }
 
               prerollPlays++;
+
+              if (resetPrerollPlays) {
+                console.log("==========Reset prerollPlays: " + prerollPlays);
+                resetPrerollPlays = false;
+                prerollPlays = 0;
+                resetAdRequestTimeout("content-playback:enter");
+              }
+
               console.log("==Repeate check: prerollPlays="+prerollPlays+" settings.prerolls="+settings.prerolls, " r:" + (prerollPlays < settings.prerolls));
               if(prerollPlays < settings.prerolls) {
                 endCycle = false;
